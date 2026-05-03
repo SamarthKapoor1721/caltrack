@@ -1,0 +1,18 @@
+export const COMMON_EXERCISES: string[] = [
+  "Running", "Walking", "Jogging", "Cycling", "Swimming", "Rowing", "Jump Rope",
+  "Hiking", "Stair Climber", "Elliptical", "Treadmill",
+  "Push Up", "Pull Up", "Chin Up", "Dip", "Plank", "Sit Up", "Crunch",
+  "Squat", "Front Squat", "Goblet Squat", "Bulgarian Split Squat", "Lunge", "Step Up",
+  "Deadlift", "Romanian Deadlift", "Sumo Deadlift", "Hip Thrust", "Glute Bridge",
+  "Bench Press", "Incline Bench Press", "Decline Bench Press", "Dumbbell Press",
+  "Overhead Press", "Military Press", "Arnold Press", "Lateral Raise", "Front Raise",
+  "Bent Over Row", "Barbell Row", "Dumbbell Row", "T-Bar Row", "Seated Cable Row",
+  "Lat Pulldown", "Face Pull", "Shrug",
+  "Bicep Curl", "Hammer Curl", "Preacher Curl", "Concentration Curl",
+  "Tricep Extension", "Skull Crusher", "Tricep Pushdown", "Close Grip Bench Press",
+  "Leg Press", "Leg Extension", "Leg Curl", "Calf Raise",
+  "Russian Twist", "Mountain Climber", "Burpee", "Jumping Jack", "High Knees",
+  "Box Jump", "Kettlebell Swing", "Clean and Jerk", "Snatch", "Thruster",
+  "Yoga", "Pilates", "Stretching", "Boxing", "Kickboxing", "HIIT",
+  "Basketball", "Soccer", "Tennis", "Volleyball", "Football", "Golf",
+];

@@ -1,0 +1,114 @@
+// ─── CalTrack Database Schema ───
+// Prisma schema for a calorie tracking application
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTRA_ACTIVE
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+// ─── Models ───
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String        @unique
+  password      String?       // nullable to support OAuth in the future
+  age           Int?
+  height        Float?        // in cm
+  weight        Float?        // in kg
+  gender        Gender?
+  activityLevel ActivityLevel @default(SEDENTARY)
+  calorieGoal   Int?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  foodLogs      FoodLog[]
+  weightLogs    WeightLog[]
+  workouts      Workout[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Workout {
+  id             String   @id @default(cuid())
+  userId         String
+  exerciseName   String
+  durationMin    Int?
+  sets           Int?
+  reps           Int?
+  toFailure      Boolean  @default(false)
+  intensity      Int?     // RPE 1–10
+  caloriesBurned Int?
+  notes          String?
+
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("workouts")
+}
+
+model FoodLog {
+  id        String   @id @default(cuid())
+  userId    String
+  foodName  String
+  calories  Int
+  protein   Float    @default(0)
+  carbs     Float    @default(0)
+  fat       Float    @default(0)
+  mealType  MealType
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("food_logs")
+}
+
+model WeightLog {
+  id        String   @id @default(cuid())
+  userId    String
+  weight    Float    // in kg
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("weight_logs")
+}
