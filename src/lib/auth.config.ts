@@ -43,11 +43,20 @@ export const authConfig: NextAuthConfig = {
       // Onboarding is protected (requires login) but logged-in users
       // should NOT be redirected away from it.
       if (pathname.startsWith("/onboarding")) {
-        return isLoggedIn;
+        if (!isLoggedIn) {
+          return Response.redirect(new URL("/login", request.nextUrl));
+        }
+        return true;
       }
 
-      // All other routes require auth
-      return isLoggedIn;
+      // All other routes require auth — explicitly redirect instead of returning false
+      // to avoid NextAuth falling back to 403 when AUTH_URL is misconfigured
+      if (!isLoggedIn) {
+        const loginUrl = new URL("/login", request.nextUrl);
+        loginUrl.searchParams.set("callbackUrl", pathname);
+        return Response.redirect(loginUrl);
+      }
+      return true;
     },
     async jwt({ token, user }) {
       if (user) {
