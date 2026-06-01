@@ -4,9 +4,10 @@ import { DEFAULT_GOALS, MACRO_COLORS, MEAL_TYPES, getTodayISO } from "@/lib";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getUserById, getDailySummary, getCalorieHistory, getWeightLogsByUser } from "@/services";
+import { getUserById, getDailySummary, getCalorieHistory, getWeightLogsByUser, getExerciseWeightHistory } from "@/services";
 import { CalorieChart } from "@/components/calorie-chart";
 import { DashboardWeightChart } from "@/components/dashboard-weight-chart";
+import { StrengthProgressChart } from "@/components/strength-progress-chart";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +49,11 @@ export default async function HomePage() {
   }
 
   const today = getTodayISO();
-  const [summary, calorieHistory, weightLogs] = await Promise.all([
+  const [summary, calorieHistory, weightLogs, strengthHistory] = await Promise.all([
     getDailySummary(user.id, today),
     getCalorieHistory(user.id, 7),
     getWeightLogsByUser(user.id),
+    getExerciseWeightHistory(user.id, 90),
   ]);
 
   const calorieGoal = user.calorieGoal ?? null;
@@ -190,6 +192,25 @@ export default async function HomePage() {
             }
           />
           <DashboardWeightChart data={weightChartData} />
+        </Card>
+      </div>
+
+      {/* ── Strength Progress ────────────────────── */}
+      <div className="mb-8">
+        <Card className="animate-fade-in">
+          <CardHeader
+            title="Strength Progress"
+            subtitle="Weight lifted per exercise over time"
+            action={
+              <Link
+                href="/workout"
+                className="rounded-lg bg-emerald-500/8 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
+              >
+                Log workout →
+              </Link>
+            }
+          />
+          <StrengthProgressChart data={strengthHistory} />
         </Card>
       </div>
 

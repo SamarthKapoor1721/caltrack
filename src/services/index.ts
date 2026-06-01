@@ -30,7 +30,10 @@ export {
   addWorkout,
   getWorkoutsByUser,
   getWorkoutsByUserSince,
+  getExerciseWeightHistory,
   deleteWorkout,
   type CreateWorkoutInput,
+  type ExerciseWeightPoint,
+  type ExerciseWeightHistory,
 } from "./workout.service";
 

@@ -66,6 +66,7 @@ model Workout {
   durationMin    Int?
   sets           Int?
   reps           Int?
+  weight         Float?   // load lifted, in kg (for progressive-overload tracking)
   toFailure      Boolean  @default(false)
   intensity      Int?     // RPE 1–10
   caloriesBurned Int?

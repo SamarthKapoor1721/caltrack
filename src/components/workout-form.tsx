@@ -17,6 +17,7 @@ export function WorkoutForm() {
   const [duration, setDuration] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
+  const [weight, setWeight] = useState("");
   const [toFailure, setToFailure] = useState(false);
   const [intensity, setIntensity] = useState<number | null>(null);
   const [calories, setCalories] = useState("");
@@ -42,7 +43,7 @@ export function WorkoutForm() {
   }, [exerciseName]);
 
   const reset = useCallback(() => {
-    setExerciseName(""); setDuration(""); setSets(""); setReps("");
+    setExerciseName(""); setDuration(""); setSets(""); setReps(""); setWeight("");
     setToFailure(false); setIntensity(null); setCalories(""); setNotes("");
     setSuggestions([]);
     nameRef.current?.focus();
@@ -65,6 +66,7 @@ export function WorkoutForm() {
           durationMinutes: duration ? Number(duration) : undefined,
           sets: sets ? Number(sets) : undefined,
           reps: reps ? Number(reps) : undefined,
+          weight: weight ? Number(weight) : undefined,
           toFailure,
           intensity,
           caloriesBurned: calories ? Number(calories) : undefined,
@@ -85,7 +87,7 @@ export function WorkoutForm() {
     } finally {
       setSaving(false);
     }
-  }, [exerciseName, duration, sets, reps, toFailure, intensity, calories, notes, router, reset]);
+  }, [exerciseName, duration, sets, reps, weight, toFailure, intensity, calories, notes, router, reset]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -118,8 +120,8 @@ export function WorkoutForm() {
         )}
       </div>
 
-      {/* Sets × Reps */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Sets × Reps × Weight */}
+      <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-sm font-medium">Sets</label>
           <input value={sets} onChange={(e) => setSets(e.target.value)} type="number" min="1" max="100" placeholder="e.g. 4"
@@ -128,6 +130,11 @@ export function WorkoutForm() {
         <div>
           <label className="block text-sm font-medium">Reps</label>
           <input value={reps} onChange={(e) => setReps(e.target.value)} type="number" min="1" placeholder="e.g. 10"
+            className="h-12 w-full rounded-xl border border-border-light bg-background px-4 text-sm shadow-sm" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Weight (kg)</label>
+          <input value={weight} onChange={(e) => setWeight(e.target.value)} type="number" min="0" max="1000" step="0.5" placeholder="e.g. 60"
             className="h-12 w-full rounded-xl border border-border-light bg-background px-4 text-sm shadow-sm" />
         </div>
       </div>

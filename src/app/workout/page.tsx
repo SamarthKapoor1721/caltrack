@@ -87,6 +87,11 @@ export default async function WorkoutPage() {
                                 {w.sets} sets{w.reps != null ? ` × ${w.reps} reps` : ""}
                               </span>
                             )}
+                            {w.weight != null && (
+                              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                {w.weight} kg
+                              </span>
+                            )}
                             {w.intensity != null && (
                               <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${
                                 w.intensity <= 4 ? "bg-emerald-500/10 text-emerald-700"

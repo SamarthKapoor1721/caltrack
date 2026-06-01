@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     const durationMin = toNum(body.durationMinutes ?? body.durationMin);
     const sets         = toNum(body.sets);
     const reps         = toNum(body.reps);
+    const weight       = toNum(body.weight);
     const intensity    = toNum(body.intensity);
     const caloriesBurned = toNum(body.caloriesBurned);
     const toFailure    = body.toFailure === true;
@@ -107,6 +108,9 @@ export async function POST(request: Request) {
     if (reps != null && (!Number.isInteger(reps) || reps < 1 || reps > 10000)) {
       return NextResponse.json({ error: "Reps must be a positive number." }, { status: 400 });
     }
+    if (weight != null && (!Number.isFinite(weight) || weight < 0 || weight > 1000)) {
+      return NextResponse.json({ error: "Weight must be between 0 and 1000 kg." }, { status: 400 });
+    }
     if (intensity != null && (!Number.isInteger(intensity) || intensity < 1 || intensity > 10)) {
       return NextResponse.json({ error: "Intensity (RPE) must be between 1 and 10." }, { status: 400 });
     }
@@ -120,6 +124,7 @@ export async function POST(request: Request) {
       durationMin: durationMin != null ? Math.round(durationMin) : null,
       sets: sets != null ? Math.round(sets) : null,
       reps: reps != null ? Math.round(reps) : null,
+      weight: weight != null ? Math.round(weight * 10) / 10 : null,
       toFailure,
       intensity: intensity != null ? Math.round(intensity) : null,
       caloriesBurned: caloriesBurned != null ? Math.round(caloriesBurned) : null,
