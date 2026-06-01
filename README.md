@@ -1,86 +1,154 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CalTrack
 
-## Getting Started
+Lightweight full‑stack calorie & exercise tracking app built with Next.js, Prisma, and PostgreSQL (Neon). Includes authentication (NextAuth), integrations with USDA FoodData Central and an exercise API, and is deployed on Render.
 
-First, run the development server:
+## Getting started (developer)
+
+1. Clone and install
+
+```bash
+git clone <repo-url>
+cd caltrack
+npm ci
+```
+
+2. Local development
+
+Create a local `.env` file (see Required environment variables) then run:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser. Edit `app/page.tsx` or components under `src/` — the page auto-updates during development.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Build for production locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## Required environment variables
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env` (do not commit) and also add these in Render (or your chosen host) as service environment variables:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `DATABASE_URL` — Postgres connection string (Neon/Postgres)
+- `NEXTAUTH_URL` — site URL (e.g. `https://caltrack.example.com`)
+- `NEXTAUTH_SECRET` — long random string (generate with `openssl rand -base64 32`)
+- `FDC_API_KEY` — USDA FoodData Central API key
+- `EXERCISE_API_KEY` — exercise provider API key
+- `EXERCISE_API_BASE_URL` — optional provider base URL
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Note: NextAuth requires the exact env names `NEXTAUTH_URL` and `NEXTAUTH_SECRET`. Using `AUTH_URL` or `AUTH_SECRET` will cause auth failures (403).
 
-## Deploy on Vercel
+## Prisma / Database
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Generate the Prisma client after installing dependencies:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx prisma generate
+```
 
-## Deploying to Vercel (quick checklist)
+- Create & run migrations (development):
 
-1. Push your repository to GitHub and create a Vercel project connected to that repo.
+```bash
+npx prisma migrate dev --name init
+```
 
-2. In Vercel Project Settings → Environment Variables, set the following (at minimum):
+- Apply migrations in production (Render deploy command or CI):
 
-	- `DATABASE_URL` — your production Postgres connection string (e.g. `postgres://user:pass@host:5432/dbname`)
-	- `NEXTAUTH_URL` — your site URL (e.g. `https://your-app.vercel.app`)
-	- `NEXTAUTH_SECRET` — a long random string for NextAuth (generate with `openssl rand -base64 32`)
-	- `EXERCISE_API_KEY` — (optional) API key for exercise provider (server-only)
-	- `EXERCISE_API_BASE_URL` — (optional) provider base URL (e.g. `https://api.exerciseprovider.com`)
+```bash
+npx prisma migrate deploy
+```
 
-	Add variables for Production and Preview environments as needed.
+- Seed (if available): run the seed script in `prisma/` (check `package.json` scripts).
 
-3. Migrations and Prisma client
+## Deploying to Render (quick checklist)
 
-	- This repository includes a `postinstall` script that runs `prisma generate` during install.
-	- In production, apply migrations non-interactively with:
+This project is configured to deploy to Render. Use the steps below as a minimal checklist.
 
-	  ```bash
-	  npx prisma migrate deploy
-	  ```
+1. Push your repository to GitHub (or connect Git provider to Render).
 
-	- You can run migrations manually (recommended the first time), or use the included GitHub Action to apply migrations automatically on pushes to `main`. The action expects a `DATABASE_URL` secret in GitHub Secrets.
+2. Create a new Web Service on Render and connect the repo.
 
-4. Build & deploy
+3. Set environment variables in the Render service (the same list as Required environment variables).
 
-	- Vercel will run the normal install/build process (`npm ci` / `npm run build`). The site should be available at `https://<your-project>.vercel.app`.
+4. Set the Build Command and Start Command (Render uses these during deploy):
+
+Build Command:
+
+```bash
+npm ci && npm run build
+```
+
+Start Command:
+
+```bash
+npm run start
+```
 
 5. Post-deploy checks
 
-	- Verify authentication and any provider integrations.
-	- Check function logs in Vercel if server routes (API) are failing.
+- Verify authentication and sign-in flows.
+- Inspect service logs in Render for any runtime errors (missing env vars, API 403s).
+- If migrations are needed during deploy, add a Pre-Deploy command (or use a separate job) to run `npx prisma migrate deploy`.
 
-If you'd like, I can add a `vercel.json` or more advanced GitHub Actions (e.g., run migrations only when specific files change). Let me know which automation you'd prefer.
+## CI / Continuous deployment
 
-## Continuous deployment via GitHub Actions → Vercel
+If you prefer deploying via GitHub Actions or Render's native deploys, ensure your pipeline sets the `DATABASE_URL` secret and runs `npx prisma migrate deploy` before starting the service.
 
-If you prefer deploying via GitHub Actions (instead of connecting the repo to Vercel directly), this repo includes a workflow that triggers a Vercel deploy on pushes to `main`.
+## Troubleshooting — common issues
 
-What you need to add in GitHub (Repository → Settings → Secrets):
+- 403 Forbidden in production:
+	- Confirm `NEXTAUTH_URL` and `NEXTAUTH_SECRET` are set in your host's environment (not `AUTH_URL`/`AUTH_SECRET`).
+	- Verify API keys (`FDC_API_KEY`, `EXERCISE_API_KEY`) are valid and set.
+	- Check logs in Render to see which request is failing.
 
-- `VERCEL_TOKEN` — a Vercel token created in Vercel Dashboard > Settings > Tokens.
-- `VERCEL_PROJECT_ID` — your Vercel project ID (found in project settings or the Vercel dashboard URL).
-- `VERCEL_ORG_ID` — your Vercel organization ID.
+- Database connection errors:
+	- Ensure `DATABASE_URL` has correct credentials and the database allows connections from Render.
+	- Run `npx prisma migrate deploy` and check migration errors.
 
-Once those secrets are set, pushing to `main` will run the `.github/workflows/vercel-deploy.yml` workflow and deploy to Vercel.
+- Missing Prisma client:
+	- Run `npx prisma generate` or reinstall dependencies (`npm ci`) which runs `postinstall` scripts.
+
+## Tests, linting, formatting
+
+- Run tests (if present):
+
+```bash
+npm test
+```
+
+- Lint:
+
+```bash
+npm run lint
+```
+
+- Format:
+
+```bash
+npm run format
+```
+
+## Contributing
+
+- Fork → branch from `main` → open a PR with a clear description and tests.
+- Run tests and linters locally before creating a PR.
+
+## Maintainer notes
+
+- Keep secrets only in your hosting provider (Render/GitHub Secrets).
+- Rotate API keys if exposed.
+- Consider adding a `render.yaml` for infrastructure-as-code or a small deploy script that runs migrations during deploy.
+
+---
+
+If you want, I can also:
+
+- add a `render.yaml` and Pre-Deploy commands to run migrations automatically,
+- add a short `CONTRIBUTING.md` with PR checklist,
+- or update `package.json` scripts to include a `deploy` script that runs migrations then starts the server.
 
 
