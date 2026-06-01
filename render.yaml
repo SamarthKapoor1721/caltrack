@@ -1,0 +1,30 @@
+# Render Blueprint for CalTrack (Next.js 16 + Prisma + Neon Postgres)
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After committing this file, in the Render dashboard:
+#   New → Blueprint → pick this repo. Then set the `sync: false` secrets below
+#   under the service's Environment tab. Redeploy.
+services:
+  - type: web
+    name: caltrack
+    runtime: node
+    plan: free
+    # Build: install deps (postinstall runs `prisma generate`), apply DB
+    # migrations, then build Next.js.
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    # Start: `next start` listens on Render's $PORT automatically.
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
+      # Auth must point at the live Render URL (not localhost / Vercel).
+      - key: AUTH_URL
+        value: https://ltrack-6c2q.onrender.com
+      - key: AUTH_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: FDC_API_KEY
+        sync: false
+      - key: EXERCISE_API_KEY
+        sync: false

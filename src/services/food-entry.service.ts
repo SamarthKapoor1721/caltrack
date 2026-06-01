@@ -2,7 +2,7 @@
 // Business logic for creating, reading, updating, and deleting food log entries.
 
 import { db } from "@/database";
-import { type CreateFoodLogInput, type DailySummary, getTodayISO, calculateDailySummary } from "@/lib";
+import { type CreateFoodLogInput, type DailySummary, getTodayISO, toDateKey, calculateDailySummary } from "@/lib";
 import { type MealType } from "@/generated/prisma/client";
 
 /**
@@ -125,12 +125,12 @@ export async function getCalorieHistory(
   for (let i = 0; i < days; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const key = d.toISOString().split("T")[0];
+    const key = toDateKey(d);
     buckets.set(key, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }
 
   for (const e of entries) {
-    const key = e.createdAt.toISOString().split("T")[0];
+    const key = toDateKey(e.createdAt);
     const bucket = buckets.get(key);
     if (bucket) {
       bucket.calories += e.calories;
@@ -149,5 +149,63 @@ export async function getCalorieHistory(
     protein: Math.round(totals.protein),
     carbs: Math.round(totals.carbs),
     fat: Math.round(totals.fat),
+  }));
+}
+
+// ─── Daily history (grouped by date) ─────────────
+
+export interface DailyHistoryEntry {
+  date: string;       // "YYYY-MM-DD"
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  entryCount: number;
+}
+
+/**
+ * Return real per-day nutrition summaries for a user, newest day first.
+ * Only days that actually have logged entries are included.
+ */
+export async function getDailyNutritionHistory(
+  userId: string,
+  days = 30,
+): Promise<DailyHistoryEntry[]> {
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const entries = await db.foodLog.findMany({
+    where: { userId, createdAt: { gte: start } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const buckets = new Map<string, DailyHistoryEntry>();
+
+  for (const e of entries) {
+    const key = toDateKey(e.createdAt);
+    const bucket = buckets.get(key) ?? {
+      date: key,
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      entryCount: 0,
+    };
+    bucket.calories += e.calories;
+    bucket.protein += e.protein;
+    bucket.carbs += e.carbs;
+    bucket.fat += e.fat;
+    bucket.entryCount += 1;
+    buckets.set(key, bucket);
+  }
+
+  // Map preserves insertion order; entries are already newest-first.
+  return Array.from(buckets.values()).map((b) => ({
+    ...b,
+    calories: Math.round(b.calories),
+    protein: Math.round(b.protein),
+    carbs: Math.round(b.carbs),
+    fat: Math.round(b.fat),
   }));
 }

@@ -6,7 +6,9 @@ export {
   deleteFoodEntry,
   getDailySummary,
   getCalorieHistory,
+  getDailyNutritionHistory,
   type DailyCaloriePoint,
+  type DailyHistoryEntry,
 } from "./food-entry.service";
 
 export {

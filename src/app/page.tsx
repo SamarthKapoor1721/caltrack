@@ -8,6 +8,8 @@ import { getUserById, getDailySummary, getCalorieHistory, getWeightLogsByUser } 
 import { CalorieChart } from "@/components/calorie-chart";
 import { DashboardWeightChart } from "@/components/dashboard-weight-chart";
 
+export const dynamic = "force-dynamic";
+
 // ─── Helpers ─────────────────────────────────────
 function greeting(): string {
   const h = new Date().getHours();

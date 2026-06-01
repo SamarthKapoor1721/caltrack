@@ -7,6 +7,8 @@ import { getEntriesByUserAndDate } from "@/services";
 import { FoodSearchWrapper } from "@/components/food-search-wrapper";
 import { DeleteFoodEntry } from "./delete-button";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Log Food — CalTrack",
 };

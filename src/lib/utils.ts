@@ -9,14 +9,45 @@ export function formatCalories(value: number): string {
 }
 
 /**
- * Get today's date as YYYY-MM-DD
+ * Convert a Date (or date-like value) to a YYYY-MM-DD key in the
+ * server's local timezone.
+ *
+ * IMPORTANT: every place that buckets entries "by day" must use this
+ * helper so that the day a record belongs to is computed consistently.
+ * Mixing this with `toISOString()` (which is UTC) causes entries to land
+ * in a different day on non-UTC servers — e.g. food logged today showing
+ * up under yesterday and never counting toward today's totals.
  */
-export function getTodayISO(): string {
-  const d = new Date();
+export function toDateKey(date: Date | string | number): string {
+  const d = new Date(date);
   const yyyy = d.getFullYear();
   const mm   = String(d.getMonth() + 1).padStart(2, "0");
   const dd   = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * Get today's date as YYYY-MM-DD
+ */
+export function getTodayISO(): string {
+  return toDateKey(new Date());
+}
+
+/**
+ * Human-friendly label for a YYYY-MM-DD key: "Today", "Yesterday", or a
+ * formatted date like "Mon, Jun 1".
+ */
+export function dateLabel(key: string, today: string = getTodayISO()): string {
+  if (key === today) return "Today";
+
+  const yesterday = toDateKey(new Date(new Date(`${today}T12:00:00`).getTime() - 86_400_000));
+  if (key === yesterday) return "Yesterday";
+
+  return new Date(`${key}T12:00:00`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 /**

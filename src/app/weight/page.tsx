@@ -6,18 +6,13 @@ import { getWeightLogsByUser } from "@/services";
 import { WeightLogForm } from "@/components/weight-log-form";
 import { WeightChart } from "@/components/weight-chart";
 import { DeleteWeightEntry } from "./delete-button";
+import { toDateKey, dateLabel, getTodayISO } from "@/lib";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Weight — CalTrack",
 };
-
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 function formatTime(date: Date): string {
   return new Date(date).toLocaleTimeString("en-US", {
@@ -37,6 +32,26 @@ export default async function WeightPage() {
     weight: e.weight,
     createdAt: e.createdAt.toISOString(),
   }));
+
+  const today = getTodayISO();
+
+  // Diff vs the previous (older) entry, computed across the full list.
+  const withDiff = entries.map((entry, i) => {
+    const prev = entries[i + 1];
+    return {
+      ...entry,
+      diff: prev ? Math.round((entry.weight - prev.weight) * 10) / 10 : null,
+    };
+  });
+
+  // Group the most recent 20 entries by calendar date (newest day first).
+  const grouped: { key: string; items: typeof withDiff }[] = [];
+  for (const item of withDiff.slice(0, 20)) {
+    const key = toDateKey(item.createdAt);
+    const last = grouped[grouped.length - 1];
+    if (last && last.key === key) last.items.push(item);
+    else grouped.push({ key, items: [item] });
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:py-8">
@@ -78,61 +93,61 @@ export default async function WeightPage() {
             title="Recent Entries"
             subtitle="Your weight log history"
           />
-          <div className="stagger-children divide-y divide-border-light">
-            {entries.slice(0, 20).map((entry, i) => {
-              const prev = entries[i + 1];
-              const diff = prev
-                ? Math.round((entry.weight - prev.weight) * 10) / 10
-                : null;
-
-              return (
-                <div
-                  key={entry.id}
-                  className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 sm:gap-4"
-                >
-                  {/* Icon */}
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/8 sm:h-11 sm:w-11">
-                    <Scale className="h-5 w-5 text-violet-600 dark:text-violet-400" />
-                  </div>
-
-                  {/* Date + Time */}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">
-                      {formatDate(entry.createdAt)}
-                    </p>
-                    <div className="mt-0.5 flex items-center gap-1 text-xs text-muted">
-                      <Clock className="h-3 w-3" />
-                      {formatTime(entry.createdAt)}
-                    </div>
-                  </div>
-
-                  {/* Change badge */}
-                  {diff !== null && (
-                    <span
-                      className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                        diff < 0
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : diff > 0
-                            ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                            : "bg-gray-500/10 text-gray-600 dark:text-gray-400"
-                      }`}
+          <div className="space-y-5">
+            {grouped.map((group) => (
+              <div key={group.key}>
+                {/* Date header */}
+                <p className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                  {dateLabel(group.key, today)}
+                </p>
+                <div className="stagger-children divide-y divide-border-light">
+                  {group.items.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 sm:gap-4"
                     >
-                      {diff > 0 ? "+" : ""}
-                      {diff} kg
-                    </span>
-                  )}
+                      {/* Icon */}
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/8 sm:h-11 sm:w-11">
+                        <Scale className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                      </div>
 
-                  {/* Weight value */}
-                  <div className="shrink-0 text-right">
-                    <span className="text-sm font-bold">{entry.weight}</span>
-                    <span className="ml-0.5 text-xs text-muted">kg</span>
-                  </div>
+                      {/* Time */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1 text-xs text-muted">
+                          <Clock className="h-3 w-3" />
+                          {formatTime(entry.createdAt)}
+                        </div>
+                      </div>
 
-                  {/* Delete button */}
-                  <DeleteWeightEntry id={entry.id} />
+                      {/* Change badge */}
+                      {entry.diff !== null && (
+                        <span
+                          className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                            entry.diff < 0
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : entry.diff > 0
+                                ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                                : "bg-gray-500/10 text-gray-600 dark:text-gray-400"
+                          }`}
+                        >
+                          {entry.diff > 0 ? "+" : ""}
+                          {entry.diff} kg
+                        </span>
+                      )}
+
+                      {/* Weight value */}
+                      <div className="shrink-0 text-right">
+                        <span className="text-sm font-bold">{entry.weight}</span>
+                        <span className="ml-0.5 text-xs text-muted">kg</span>
+                      </div>
+
+                      {/* Delete button */}
+                      <DeleteWeightEntry id={entry.id} />
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
           {entries.length > 20 && (
