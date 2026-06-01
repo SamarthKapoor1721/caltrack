@@ -29,6 +29,7 @@ export {
 export {
   addWorkout,
   getWorkoutsByUser,
+  getWorkoutsByUserSince,
   deleteWorkout,
   type CreateWorkoutInput,
 } from "./workout.service";

@@ -36,6 +36,21 @@ export async function getWorkoutsByUser(userId: string, limit = 50) {
   });
 }
 
+/**
+ * Get a user's workouts from the last `days` days (newest first), so the
+ * history page can group them by the day they were performed.
+ */
+export async function getWorkoutsByUserSince(userId: string, days = 30) {
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  return db.workout.findMany({
+    where: { userId, createdAt: { gte: start } },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function deleteWorkout(id: string, userId: string) {
   return db.workout.deleteMany({ where: { id, userId } });
 }
