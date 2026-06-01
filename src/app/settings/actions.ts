@@ -4,40 +4,38 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/database";
 
-export async function saveProfile(formData: FormData) {
+type Gender = "MALE" | "FEMALE" | "OTHER";
+type Activity = "SEDENTARY" | "LIGHTLY_ACTIVE" | "MODERATELY_ACTIVE" | "VERY_ACTIVE" | "EXTRA_ACTIVE";
+
+export async function saveSettings(data: {
+  name: string;
+  age: number;
+  height: number;
+  weight: number;
+  gender: Gender;
+  activityLevel: Activity;
+  calorieGoal: number;
+}) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const name = (formData.get("name") as string | null)?.trim();
-  if (!name) return { error: "Name is required." };
+  if (!data.name?.trim()) return { error: "Name is required." };
+  if (!(data.age > 0) || !(data.height > 0) || !(data.weight > 0)) {
+    return { error: "Enter valid age, height and weight." };
+  }
+  if (!(data.calorieGoal > 0)) return { error: "Enter a valid calorie goal." };
 
   await db.user.update({
     where: { id: session.user.id },
-    data: { name },
-  });
-
-  revalidatePath("/settings");
-  revalidatePath("/");
-  return { success: true };
-}
-
-export async function saveGoals(formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
-  const parse = (key: string) => {
-    const v = formData.get(key);
-    if (v == null || v === "") return null;
-    const n = Number(v);
-    return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
-  };
-
-  const calorieGoal = parse("calories");
-  if (calorieGoal == null) return { error: "Enter a valid calorie goal." };
-
-  await db.user.update({
-    where: { id: session.user.id },
-    data: { calorieGoal },
+    data: {
+      name: data.name.trim(),
+      age: Math.round(data.age),
+      height: data.height,
+      weight: data.weight,
+      gender: data.gender,
+      activityLevel: data.activityLevel,
+      calorieGoal: Math.round(data.calorieGoal),
+    },
   });
 
   revalidatePath("/settings");

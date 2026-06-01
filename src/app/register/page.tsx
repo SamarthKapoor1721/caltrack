@@ -4,56 +4,40 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Flame } from "@/components/icons";
+import { AuthShell } from "@/components/auth-shell";
+import { BrandMark, Input, Field, Button } from "@/components/ui";
+import { User, Mail, Lock, Eye, ChevronRight } from "@/components/icons";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
     }
-
     setLoading(true);
-
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error || "Registration failed.");
         return;
       }
-
-      // Auto sign-in after registration
-      const signInResult = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
+      const signInResult = await signIn("credentials", { email, password, redirect: false });
       if (signInResult?.error) {
-        // Registration succeeded but sign-in failed — redirect to login
         router.push("/login");
       } else {
         router.push("/");
@@ -67,114 +51,53 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-var(--nav-height))] items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md animate-scale-in">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
-            <Flame className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Create your account
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            Start tracking your nutrition with CalTrack
-          </p>
-        </div>
-
-        {/* Form Card */}
-        <div className="rounded-2xl border border-border-light bg-card p-6 shadow-sm sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="rounded-xl bg-red-500/8 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label htmlFor="name" className="block text-sm font-medium">
-                Name <span className="text-xs text-muted">(optional)</span>
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="h-11 w-full rounded-xl border border-border-light bg-background px-4 text-sm shadow-sm transition-all placeholder:text-muted/60 hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="block text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                className="h-11 w-full rounded-xl border border-border-light bg-background px-4 text-sm shadow-sm transition-all placeholder:text-muted/60 hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-sm font-medium">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={8}
-                className="h-11 w-full rounded-xl border border-border-light bg-background px-4 text-sm shadow-sm transition-all placeholder:text-muted/60 hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={8}
-                className="h-11 w-full rounded-xl border border-border-light bg-background px-4 text-sm shadow-sm transition-all placeholder:text-muted/60 hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full rounded-xl bg-primary font-semibold text-white shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? "Creating account..." : "Create Account"}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-muted">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-primary hover:text-primary/80"
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
+    <AuthShell>
+      <div className="mb-7 md:hidden">
+        <BrandMark />
       </div>
-    </div>
+      <h2 className="m-0 mb-1.5 text-[26px] font-extrabold tracking-[-.02em]">Create your account</h2>
+      <p className="m-0 mb-[26px] text-sm text-muted">Start tracking in under a minute.</p>
+
+      <form onSubmit={handleSubmit} className="grid gap-[15px]">
+        {error && <div className="rounded-xl bg-red-500/8 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400">{error}</div>}
+        <Field label="Full name">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Alex Mercer" icon={<User width={17} height={17} />} />
+        </Field>
+        <Field label="Email">
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" icon={<Mail width={17} height={17} />} required />
+        </Field>
+        <Field label="Password">
+          <div className="relative">
+            <Input
+              type={show ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              icon={<Lock width={17} height={17} />}
+              required
+              minLength={8}
+            />
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              className="absolute right-2.5 top-1/2 flex -translate-y-1/2 text-muted"
+              aria-label="Toggle password visibility"
+            >
+              <Eye width={17} height={17} />
+            </button>
+          </div>
+        </Field>
+        <Button type="submit" variant="primary" full size="lg" disabled={loading}>
+          {loading ? "Creating account…" : "Create account"} <ChevronRight width={17} height={17} />
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-[13.5px] text-muted">
+        Already have an account?{" "}
+        <Link href="/login" className="font-bold text-primary">
+          Log in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

@@ -32,7 +32,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <Navbar />
-          <main className="min-h-[calc(100vh-var(--nav-height))] pt-2">
+          <main className="min-h-[calc(100vh-var(--navbar-h))]">
             {children}
           </main>
         </SessionProvider>

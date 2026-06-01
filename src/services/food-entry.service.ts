@@ -152,6 +152,21 @@ export async function getCalorieHistory(
   }));
 }
 
+/**
+ * Return raw food entries for a user over the last `days` days, newest first.
+ * Used by the history timeline to render individual food items per day.
+ */
+export async function getFoodEntriesSince(userId: string, days = 30) {
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  return db.foodLog.findMany({
+    where: { userId, createdAt: { gte: start } },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 // ─── Daily history (grouped by date) ─────────────
 
 export interface DailyHistoryEntry {

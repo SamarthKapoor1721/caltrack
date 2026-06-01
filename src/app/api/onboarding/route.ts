@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { weight, height, age, gender, activityLevel } = body;
+    const { weight, height, age, gender, activityLevel, calorieGoal: calorieGoalOverride } = body;
 
     // ── Validation ────────────────────────────────────
     const errors: string[] = [];
@@ -49,8 +49,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
     }
 
-    // ── Calculate TDEE ────────────────────────────────
-    const calorieGoal = calculateTDEE({ weight, height, age, gender, activityLevel });
+    // ── Calculate TDEE (allow an explicit goal override from the wizard) ──
+    const tdee = calculateTDEE({ weight, height, age, gender, activityLevel });
+    const calorieGoal =
+      typeof calorieGoalOverride === "number" && calorieGoalOverride > 0
+        ? Math.round(calorieGoalOverride)
+        : tdee;
 
     // ── Persist profile ───────────────────────────────
     await updateUserProfile(session.user.id, {

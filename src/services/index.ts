@@ -7,6 +7,7 @@ export {
   getDailySummary,
   getCalorieHistory,
   getDailyNutritionHistory,
+  getFoodEntriesSince,
   type DailyCaloriePoint,
   type DailyHistoryEntry,
 } from "./food-entry.service";
