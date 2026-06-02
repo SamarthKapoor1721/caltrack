@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Close } from "@/components/icons";
 import { IconButton } from "./primitives";
 
@@ -17,6 +18,9 @@ export function Modal({
   title?: string;
   width?: number;
 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -24,8 +28,8 @@ export function Modal({
     return () => window.removeEventListener("keydown", h);
   }, [open, onClose]);
 
-  if (!open) return null;
-  return (
+  if (!open || !mounted) return null;
+  return createPortal(
     <div
       onClick={onClose}
       className="anim-fade"
@@ -36,9 +40,10 @@ export function Modal({
         background: "rgba(8,12,22,.5)",
         backdropFilter: "blur(4px)",
         display: "flex",
-        alignItems: "flex-end",
+        alignItems: "center",
         justifyContent: "center",
         padding: 16,
+        overflowY: "auto",
       }}
     >
       <div
@@ -52,9 +57,9 @@ export function Modal({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-lg)",
           padding: 24,
-          maxHeight: "88vh",
+          maxHeight: "calc(100dvh - 32px)",
           overflowY: "auto",
-          marginBottom: "min(8vh, 60px)",
+          margin: "auto",
         }}
       >
         {title && (
@@ -65,6 +70,7 @@ export function Modal({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
